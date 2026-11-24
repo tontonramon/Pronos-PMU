@@ -1,0 +1,26 @@
+name: Courses du jour
+
+on:
+  schedule:
+    - cron: "30 5 * * *"     # 5h30 UTC = 6h30 ou 7h30 à Paris
+  workflow_dispatch:          # bouton "Run workflow" pour lancer à la main
+
+permissions:
+  contents: write
+
+jobs:
+  generer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node generer.js
+      - name: Publier courses.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add courses.json
+          git diff --cached --quiet || git commit -m "Courses du jour"
+          git push
