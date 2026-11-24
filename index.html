@@ -122,6 +122,13 @@ async function generer(){
   $("gen").disabled=true;$("prog").style.display="block";$("bar").value=0;$("pl").textContent="Chargement du programme…";
   DATA=null;localStorage.removeItem("data");$("out").innerHTML="";   // remise à zéro
   try{
+    if(!(window.Android&&window.Android.get)){            // navigateur : lecture de courses.json (généré chaque jour par GitHub Actions)
+      const r=await fetch("courses.json?t="+Date.now());
+      if(!r.ok)throw new Error("courses.json introuvable (HTTP "+r.status+")");
+      const j=await r.json();
+      if(!j.courses||!j.courses.length)throw new Error("courses.json est vide : lancez le workflow dans l'onglet Actions de GitHub");
+      DATA=j;localStorage.setItem("data",JSON.stringify(DATA));render();return;
+    }
     const base=S.api.endsWith("/")?S.api:S.api+"/";
     const prog=await get(base+dd+"?specialisation=INTERNET");
     const list=[];
@@ -153,7 +160,7 @@ async function generer(){
     localStorage.setItem("data",JSON.stringify(DATA));
     render();
   }catch(e){
-    msg(`Chargement impossible : ${esc(e.message)}.<br><br>Si le message est « Failed to fetch », le navigateur bloque l'accès à l'API PMU (restriction CORS). Utilisez la version APK (Capacitor) ou renseignez dans Réglages l'URL d'un relais.`,true);
+    msg(`Chargement impossible : ${esc(e.message)}.<br><br>Dans un navigateur, les courses viennent du fichier courses.json mis à jour par GitHub Actions.`,true);
   }finally{$("gen").disabled=false;$("prog").style.display="none"}
 }
 
